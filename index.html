@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport Billing - Customer Wise View</title>
+    <title>Transport Billing Data Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,944 +16,728 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            background-color: #f5f7fa;
+            color: #333;
             padding: 20px;
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 1600px;
+            max-width: 1300px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
         
-        .header {
-            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+        header {
+            background: linear-gradient(135deg, #1a3a8f 0%, #2d5cc2 100%);
             color: white;
             padding: 25px 30px;
-            text-align: center;
         }
         
-        .header h1 {
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        h1 {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 15px;
+            gap: 8px;
+            transition: all 0.3s ease;
         }
         
-        .header h1 i {
-            font-size: 32px;
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
         }
         
-        .instructions {
-            background: #fff9e6;
-            padding: 15px 30px;
-            border-bottom: 1px solid #ffd166;
-            font-size: 14px;
+        .btn-primary:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
             color: #333;
         }
         
-        .instructions a {
-            color: #1a2980;
-            text-decoration: none;
-            font-weight: bold;
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
         }
         
-        .instructions a:hover {
-            text-decoration: underline;
-        }
-        
-        .controls {
-            padding: 25px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .load-section {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .load-button {
-            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+        .btn-share {
+            background-color: #2196F3;
             color: white;
-            border: none;
-            padding: 18px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            transition: all 0.3s;
         }
         
-        .load-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(26, 41, 128, 0.3);
+        .btn-share:hover {
+            background-color: #0b7dda;
+        }
+        
+        .main-content {
+            padding: 25px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .data-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
         }
         
         .customer-selector {
-            flex: 2;
-            min-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .search-box {
-            width: 100%;
-            padding: 18px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+        select {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
             font-size: 16px;
-            transition: all 0.3s;
-            background: white;
+            min-width: 250px;
+            background-color: white;
         }
         
-        .search-box:focus {
-            outline: none;
-            border-color: #1a2980;
-            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.1);
-        }
-        
-        .customer-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            background: white;
-            display: none;
-            position: absolute;
-            width: 100%;
-            z-index: 1000;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        
-        .customer-list.active {
-            display: block;
-        }
-        
-        .customer-item {
-            padding: 15px 20px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: all 0.2s;
-        }
-        
-        .customer-item:hover {
-            background: #f0f5ff;
-        }
-        
-        .customer-item.selected {
-            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
-            color: white;
-        }
-        
-        .stats {
+        .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
-            background: white;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e0e0e0;
+            margin-top: 10px;
         }
         
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+            background-color: #f9f9f9;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-left: 5px solid #1a3a8f;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
         }
         
         .stat-card h3 {
             font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 10px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .stat-card .value {
-            font-size: 24px;
-            font-weight: bold;
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a3a8f;
         }
         
-        .data-container {
+        .data-table-container {
             overflow-x: auto;
-            padding: 20px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
         }
         
-        .data-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px;
         }
         
-        .data-table thead {
-            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
-            color: white;
-            position: sticky;
-            top: 0;
+        thead {
+            background-color: #f1f5fd;
         }
         
-        .data-table th {
-            padding: 18px 15px;
+        th {
+            padding: 16px 15px;
             text-align: left;
             font-weight: 600;
-            white-space: nowrap;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            color: #1a3a8f;
+            border-bottom: 2px solid #ddd;
         }
         
-        .data-table th:last-child {
-            border-right: none;
+        td {
+            padding: 14px 15px;
+            border-bottom: 1px solid #eaeaea;
         }
         
-        .data-table td {
-            padding: 16px 15px;
-            border-bottom: 1px solid #e0e0e0;
+        tbody tr:hover {
+            background-color: #f9fafd;
         }
         
-        .data-table tbody tr:hover {
-            background: #f8f9fa;
+        .amount {
+            font-weight: 600;
+            color: #2d5cc2;
         }
         
-        .data-table tbody tr:nth-child(even) {
-            background: #fafafa;
-        }
-        
-        .customer-header {
-            background: #e8f4fd !important;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .customer-header td {
-            padding: 20px 15px;
-            border-bottom: 2px solid #1a2980;
-        }
-        
-        .material-subtotal {
-            background: #f0fff0 !important;
+        .status-paid {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 600;
         }
         
-        .grand-total {
-            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%) !important;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
+        .status-pending {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .no-data {
             text-align: center;
-            padding: 60px 20px;
-            color: #666;
-            font-size: 18px;
+            padding: 40px 20px;
+            color: #888;
         }
         
-        .loading {
-            display: none;
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        
+        footer {
+            padding: 20px 30px;
             text-align: center;
-            padding: 40px;
-            color: #1a2980;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+            background-color: #f9f9f9;
         }
         
-        .loading.active {
-            display: block;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
         }
         
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1a2980;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #1a3a8f;
         }
         
-        .material-icons {
-            font-family: 'Material Icons';
-            font-weight: normal;
-            font-style: normal;
-            font-size: 24px;
-            display: inline-block;
-            line-height: 1;
-            text-transform: none;
-            letter-spacing: normal;
-            word-wrap: normal;
-            white-space: nowrap;
-            direction: ltr;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-            -moz-osx-font-smoothing: grayscale;
-            font-feature-settings: 'liga';
+        .modal p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
         }
         
         @media (max-width: 768px) {
-            .controls {
+            .header-content {
                 flex-direction: column;
+                align-items: flex-start;
             }
             
-            .load-section, .customer-selector {
-                min-width: 100%;
+            .actions {
+                width: 100%;
+                justify-content: space-between;
             }
             
-            .stats {
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .data-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stats-container {
                 grid-template-columns: 1fr;
             }
         }
     </style>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>
-                <i class="material-icons">local_shipping</i>
-                Transport Billing - Customer Wise View
-            </h1>
-            <p>View and analyze transport billing data for individual customers</p>
-        </div>
-        
-        <div class="instructions">
-            <p><strong>Note:</strong> This application simulates loading data from the GitHub Excel file. To use with actual data:</p>
-            <p>1. Download the file from: <a href="https://github.com/bimal-bp/cutomer-wise-billi-ng/blob/main/OCT-TRANS-BILL.xlsx" target="_blank">OCT-TRANS-BILL.xlsx</a></p>
-            <p>2. Save it locally and upload using the button below, OR</p>
-            <p>3. Click "Load Sample Data" to see the application in action with sample data</p>
-        </div>
-        
-        <div class="controls">
-            <div class="load-section">
-                <button class="load-button" id="loadSampleBtn">
-                    <i class="material-icons">play_circle</i>
-                    Load Sample Data
-                </button>
-                <p style="margin-top: 10px; text-align: center; color: #666; font-size: 14px;">or</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
-                <button class="load-button" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); margin-top: 10px;" onclick="document.getElementById('fileInput').click()">
-                    <i class="material-icons">upload</i>
-                    Upload Your Excel File
-                </button>
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>Transport Billing Data Analyzer</h1>
+                    <p class="subtitle">View and analyze transport billing data for individual customers</p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="loadDataBtn">
+                        <i class="fas fa-database"></i> Load Sample Data
+                    </button>
+                    <button class="btn btn-secondary" id="exportPdfBtn">
+                        <i class="fas fa-file-pdf"></i> Export as PDF
+                    </button>
+                    <button class="btn btn-share" id="shareBtn">
+                        <i class="fas fa-share-alt"></i> Share Details
+                    </button>
+                </div>
             </div>
-            
-            <div class="customer-selector">
-                <input type="text" 
-                       id="customerSearch" 
-                       class="search-box" 
-                       placeholder="Search customer name..." 
-                       disabled>
-                <div id="customerList" class="customer-list"></div>
-                <p id="customerHelp" style="margin-top: 10px; color: #666; font-size: 14px; display: none;">
-                    <i class="material-icons" style="vertical-align: middle; font-size: 16px;">info</i>
-                    Select a customer to view their detailed billing information
-                </p>
-            </div>
-        </div>
+        </header>
         
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Loading and processing data...</p>
-        </div>
-        
-        <div id="statsContainer" style="display: none;">
-            <div class="stats">
-                <div class="stat-card">
-                    <h3><i class="material-icons" style="vertical-align: middle;">person</i> SELECTED CUSTOMER</h3>
-                    <div class="value" id="customerName">-</div>
+        <div class="main-content">
+            <div class="data-controls">
+                <div class="customer-selector">
+                    <label for="customerSelect"><strong>Select Customer:</strong></label>
+                    <select id="customerSelect">
+                        <option value="">-- Select a customer --</option>
+                    </select>
                 </div>
-                <div class="stat-card">
-                    <h3><i class="material-icons" style="vertical-align: middle;">receipt</i> TOTAL INVOICES</h3>
-                    <div class="value" id="totalInvoices">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3><i class="material-icons" style="vertical-align: middle;">scale</i> TOTAL QUANTITY</h3>
-                    <div class="value" id="totalQuantity">0.00 Tons</div>
-                </div>
-                <div class="stat-card">
-                    <h3><i class="material-icons" style="vertical-align: middle;">payments</i> TOTAL AMOUNT</h3>
-                    <div class="value" id="totalAmount">₹0.00</div>
+                <div>
+                    <p id="dataInfo">No data loaded. Click "Load Sample Data" to begin.</p>
                 </div>
             </div>
             
-            <div class="data-container">
-                <table class="data-table" id="dataTable">
+            <div class="stats-container" id="statsContainer">
+                <div class="no-data" id="noDataMessage">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>No billing data available</h3>
+                    <p>Load sample data to view customer billing statistics</p>
+                </div>
+            </div>
+            
+            <div class="data-table-container">
+                <div id="tablePlaceholder" class="no-data">
+                    <i class="fas fa-table"></i>
+                    <h3>No billing records to display</h3>
+                    <p>Load sample data and select a customer to view billing details</p>
+                </div>
+                <table id="billingTable" style="display: none;">
                     <thead>
                         <tr>
+                            <th>Invoice #</th>
                             <th>Date</th>
-                            <th>Invoice No</th>
-                            <th>Vehicle No</th>
-                            <th>Material</th>
-                            <th>Qty (Tons)</th>
-                            <th>Rate</th>
+                            <th>Service Type</th>
+                            <th>Distance (km)</th>
+                            <th>Weight (kg)</th>
                             <th>Amount</th>
-                            <th>Total Amount</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- Data will be inserted here -->
+                        <!-- Table rows will be inserted here dynamically -->
                     </tbody>
                 </table>
             </div>
         </div>
         
-        <div class="no-data" id="noData">
-            <i class="material-icons" style="font-size: 60px; margin-bottom: 20px; color: #ccc;">description</i>
-            <h3>No Data Loaded</h3>
-            <p>Click "Load Sample Data" or upload your Excel file to begin</p>
+        <footer>
+            <p>Transport Billing Data Analyzer &copy; 2023 | Data is simulated for demonstration purposes</p>
+        </footer>
+    </div>
+    
+    <!-- Share Details Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <h2><i class="fas fa-share-alt"></i> Share Billing Details</h2>
+            <p>You can share the current customer's billing details via email or other platforms. The following information will be shared:</p>
+            <ul style="margin-left: 20px; margin-bottom: 20px;">
+                <li>Customer name and selected period</li>
+                <li>Total billed amount and number of shipments</li>
+                <li>Summary of pending and paid invoices</li>
+                <li>Recent billing transactions</li>
+            </ul>
+            <p>To share, simply copy the details below:</p>
+            <div id="shareContent" style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-family: monospace; font-size: 14px; max-height: 150px; overflow-y: auto;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="closeShareModalBtn">Close</button>
+                <button class="btn btn-share" id="copyShareBtn">Copy to Clipboard</button>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        let allData = [];
-        let customers = new Set();
-        let selectedCustomer = '';
+        // Sample transport billing data
+        const sampleCustomers = [
+            { id: 1, name: "Global Logistics Inc." },
+            { id: 2, name: "Prime Cargo Services" },
+            { id: 3, name: "Metro Transport Co." },
+            { id: 4, name: "Swift Delivery Network" },
+            { id: 5, name: "Continental Freight" }
+        ];
         
-        // DOM elements
-        const loadSampleBtn = document.getElementById('loadSampleBtn');
-        const fileInput = document.getElementById('fileInput');
-        const customerSearch = document.getElementById('customerSearch');
-        const customerList = document.getElementById('customerList');
-        const customerHelp = document.getElementById('customerHelp');
-        const loading = document.getElementById('loading');
+        const sampleBillingData = [
+            { id: 1, customerId: 1, invoice: "INV-2023-001", date: "2023-10-05", service: "Express Delivery", distance: 245, weight: 1200, amount: 1850.75, status: "Paid" },
+            { id: 2, customerId: 1, invoice: "INV-2023-002", date: "2023-10-12", service: "Standard Freight", distance: 180, weight: 3500, amount: 2250.50, status: "Paid" },
+            { id: 3, customerId: 1, invoice: "INV-2023-003", date: "2023-10-18", service: "Refrigerated Transport", distance: 320, weight: 2800, amount: 3120.25, status: "Pending" },
+            { id: 4, customerId: 1, invoice: "INV-2023-004", date: "2023-10-25", service: "Express Delivery", distance: 95, weight: 800, amount: 895.00, status: "Paid" },
+            { id: 5, customerId: 2, invoice: "INV-2023-005", date: "2023-10-03", service: "Heavy Cargo", distance: 420, weight: 12000, amount: 5800.00, status: "Paid" },
+            { id: 6, customerId: 2, invoice: "INV-2023-006", date: "2023-10-11", service: "Standard Freight", distance: 210, weight: 4500, amount: 2450.80, status: "Pending" },
+            { id: 7, customerId: 2, invoice: "INV-2023-007", date: "2023-10-19", service: "Express Delivery", distance: 150, weight: 1500, amount: 1350.25, status: "Paid" },
+            { id: 8, customerId: 3, invoice: "INV-2023-008", date: "2023-10-07", service: "Refrigerated Transport", distance: 280, weight: 3200, amount: 2980.50, status: "Paid" },
+            { id: 9, customerId: 3, invoice: "INV-2023-009", date: "2023-10-15", service: "Standard Freight", distance: 175, weight: 2800, amount: 1920.75, status: "Pending" },
+            { id: 10, customerId: 3, invoice: "INV-2023-010", date: "2023-10-22", service: "Express Delivery", distance: 60, weight: 600, amount: 650.00, status: "Paid" },
+            { id: 11, customerId: 4, invoice: "INV-2023-011", date: "2023-10-09", service: "Heavy Cargo", distance: 380, weight: 9500, amount: 5200.25, status: "Paid" },
+            { id: 12, customerId: 4, invoice: "INV-2023-012", date: "2023-10-16", service: "Standard Freight", distance: 220, weight: 4100, amount: 2350.50, status: "Pending" },
+            { id: 13, customerId: 5, invoice: "INV-2023-013", date: "2023-10-04", service: "Refrigerated Transport", distance: 310, weight: 3800, amount: 3420.75, status: "Paid" },
+            { id: 14, customerId: 5, invoice: "INV-2023-014", date: "2023-10-13", service: "Express Delivery", distance: 125, weight: 1100, amount: 1120.00, status: "Paid" },
+            { id: 15, customerId: 5, invoice: "INV-2023-015", date: "2023-10-28", service: "Standard Freight", distance: 195, weight: 3300, amount: 2150.25, status: "Pending" }
+        ];
+        
+        // DOM Elements
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const customerSelect = document.getElementById('customerSelect');
+        const dataInfo = document.getElementById('dataInfo');
         const statsContainer = document.getElementById('statsContainer');
-        const noData = document.getElementById('noData');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const tablePlaceholder = document.getElementById('tablePlaceholder');
+        const billingTable = document.getElementById('billingTable');
         const tableBody = document.getElementById('tableBody');
+        const shareModal = document.getElementById('shareModal');
+        const closeShareModalBtn = document.getElementById('closeShareModalBtn');
+        const copyShareBtn = document.getElementById('copyShareBtn');
+        const shareContent = document.getElementById('shareContent');
+        
+        // State variables
+        let isDataLoaded = false;
+        let currentCustomerId = null;
+        let customers = [];
+        let billingData = [];
+        
+        // Initialize the application
+        function initApp() {
+            // Clear any existing data
+            customers = [];
+            billingData = [];
+            isDataLoaded = false;
+            currentCustomerId = null;
+            
+            // Update UI
+            customerSelect.innerHTML = '<option value="">-- Select a customer --</option>';
+            dataInfo.textContent = 'No data loaded. Click "Load Sample Data" to begin.';
+            noDataMessage.style.display = 'block';
+            billingTable.style.display = 'none';
+            tablePlaceholder.style.display = 'block';
+            
+            // Disable buttons until data is loaded
+            exportPdfBtn.disabled = true;
+            shareBtn.disabled = true;
+        }
+        
+        // Load sample data
+        function loadSampleData() {
+            customers = [...sampleCustomers];
+            billingData = [...sampleBillingData];
+            isDataLoaded = true;
+            
+            // Populate customer dropdown
+            customerSelect.innerHTML = '<option value="">-- Select a customer --</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                customerSelect.appendChild(option);
+            });
+            
+            // Update UI
+            dataInfo.textContent = `Loaded ${billingData.length} billing records for ${customers.length} customers`;
+            noDataMessage.style.display = 'none';
+            
+            // Enable buttons
+            exportPdfBtn.disabled = false;
+            shareBtn.disabled = false;
+            
+            // Show default stats (for first customer)
+            if (customers.length > 0) {
+                customerSelect.value = customers[0].id;
+                updateCustomerData(customers[0].id);
+            }
+        }
+        
+        // Update data display when customer changes
+        function updateCustomerData(customerId) {
+            currentCustomerId = parseInt(customerId);
+            const customer = customers.find(c => c.id === currentCustomerId);
+            
+            if (!customer) return;
+            
+            // Filter billing data for selected customer
+            const customerBillingData = billingData.filter(item => item.customerId === currentCustomerId);
+            
+            // Update table
+            if (customerBillingData.length > 0) {
+                tableBody.innerHTML = '';
+                customerBillingData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.invoice}</td>
+                        <td>${item.date}</td>
+                        <td>${item.service}</td>
+                        <td>${item.distance}</td>
+                        <td>${item.weight}</td>
+                        <td class="amount">$${item.amount.toFixed(2)}</td>
+                        <td><span class="status-${item.status.toLowerCase()}">${item.status}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                tablePlaceholder.style.display = 'none';
+                billingTable.style.display = 'table';
+            } else {
+                tablePlaceholder.style.display = 'block';
+                billingTable.style.display = 'none';
+            }
+            
+            // Calculate statistics
+            const totalAmount = customerBillingData.reduce((sum, item) => sum + item.amount, 0);
+            const paidInvoices = customerBillingData.filter(item => item.status === 'Paid');
+            const pendingInvoices = customerBillingData.filter(item => item.status === 'Pending');
+            const totalDistance = customerBillingData.reduce((sum, item) => sum + item.distance, 0);
+            const totalWeight = customerBillingData.reduce((sum, item) => sum + item.weight, 0);
+            
+            // Update stats container
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Billed Amount</h3>
+                    <div class="stat-value">$${totalAmount.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Shipments</h3>
+                    <div class="stat-value">${customerBillingData.length}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Paid / Pending Invoices</h3>
+                    <div class="stat-value">${paidInvoices.length} / ${pendingInvoices.length}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Distance</h3>
+                    <div class="stat-value">${totalDistance} km</div>
+                </div>
+            `;
+            
+            // Update data info
+            dataInfo.textContent = `Showing ${customerBillingData.length} billing records for ${customer.name}`;
+        }
+        
+        // Export data as PDF
+        function exportToPDF() {
+            if (!currentCustomerId) {
+                alert('Please select a customer first.');
+                return;
+            }
+            
+            const customer = customers.find(c => c.id === currentCustomerId);
+            const customerBillingData = billingData.filter(item => item.customerId === currentCustomerId);
+            
+            if (customerBillingData.length === 0) {
+                alert('No billing data available for the selected customer.');
+                return;
+            }
+            
+            // Create PDF document
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(26, 58, 143);
+            doc.text(`Transport Billing Report: ${customer.name}`, 14, 20);
+            
+            // Add subtitle
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 30);
+            
+            // Calculate statistics for PDF
+            const totalAmount = customerBillingData.reduce((sum, item) => sum + item.amount, 0);
+            const paidInvoices = customerBillingData.filter(item => item.status === 'Paid');
+            const pendingInvoices = customerBillingData.filter(item => item.status === 'Pending');
+            
+            // Add summary section
+            doc.setFontSize(14);
+            doc.setTextColor(26, 58, 143);
+            doc.text('Summary', 14, 45);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Total Billed Amount: $${totalAmount.toFixed(2)}`, 14, 55);
+            doc.text(`Total Shipments: ${customerBillingData.length}`, 14, 62);
+            doc.text(`Paid Invoices: ${paidInvoices.length}`, 14, 69);
+            doc.text(`Pending Invoices: ${pendingInvoices.length}`, 14, 76);
+            
+            // Prepare table data
+            const tableData = customerBillingData.map(item => [
+                item.invoice,
+                item.date,
+                item.service,
+                `${item.distance} km`,
+                `${item.weight} kg`,
+                `$${item.amount.toFixed(2)}`,
+                item.status
+            ]);
+            
+            // Add billing details table
+            doc.autoTable({
+                startY: 85,
+                head: [['Invoice #', 'Date', 'Service Type', 'Distance', 'Weight', 'Amount', 'Status']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [26, 58, 143] },
+                margin: { left: 14, right: 14 }
+            });
+            
+            // Save the PDF
+            doc.save(`Transport_Billing_${customer.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+        }
+        
+        // Share details functionality
+        function shareDetails() {
+            if (!currentCustomerId) {
+                alert('Please select a customer first.');
+                return;
+            }
+            
+            const customer = customers.find(c => c.id === currentCustomerId);
+            const customerBillingData = billingData.filter(item => item.customerId === currentCustomerId);
+            
+            if (customerBillingData.length === 0) {
+                alert('No billing data available for the selected customer.');
+                return;
+            }
+            
+            // Calculate statistics for sharing
+            const totalAmount = customerBillingData.reduce((sum, item) => sum + item.amount, 0);
+            const paidInvoices = customerBillingData.filter(item => item.status === 'Paid');
+            const pendingInvoices = customerBillingData.filter(item => item.status === 'Pending');
+            const totalDistance = customerBillingData.reduce((sum, item) => sum + item.distance, 0);
+            
+            // Create shareable content
+            const shareText = `
+TRANSPORT BILLING DETAILS
+=========================
+Customer: ${customer.name}
+Report Date: ${new Date().toLocaleDateString()}
+
+SUMMARY
+-------
+Total Billed Amount: $${totalAmount.toFixed(2)}
+Total Shipments: ${customerBillingData.length}
+Paid Invoices: ${paidInvoices.length}
+Pending Invoices: ${pendingInvoices.length}
+Total Distance: ${totalDistance} km
+
+RECENT TRANSACTIONS
+-------------------
+${customerBillingData.slice(0, 5).map(item => 
+    `${item.date} | ${item.invoice} | ${item.service} | $${item.amount.toFixed(2)} | ${item.status}`
+).join('\n')}
+
+${customerBillingData.length > 5 ? `... and ${customerBillingData.length - 5} more transactions` : ''}
+            `.trim();
+            
+            // Update modal content
+            shareContent.textContent = shareText;
+            
+            // Show modal
+            shareModal.style.display = 'flex';
+        }
+        
+        // Copy share content to clipboard
+        function copyToClipboard() {
+            const textToCopy = shareContent.textContent;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Change button text temporarily to indicate success
+                const originalText = copyShareBtn.innerHTML;
+                copyShareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    copyShareBtn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy text to clipboard. Please select the text and copy manually.');
+            });
+        }
         
         // Event Listeners
-        loadSampleBtn.addEventListener('click', loadSampleData);
-        fileInput.addEventListener('change', handleFileUpload);
-        customerSearch.addEventListener('input', handleSearch);
-        customerSearch.addEventListener('focus', showCustomerList);
+        loadDataBtn.addEventListener('click', loadSampleData);
         
-        // Close customer list when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.customer-selector')) {
-                customerList.classList.remove('active');
+        exportPdfBtn.addEventListener('click', exportToPDF);
+        
+        shareBtn.addEventListener('click', shareDetails);
+        
+        customerSelect.addEventListener('change', function() {
+            if (this.value) {
+                updateCustomerData(this.value);
+            } else {
+                // Clear display if no customer selected
+                statsContainer.innerHTML = '';
+                noDataMessage.style.display = 'block';
+                billingTable.style.display = 'none';
+                tablePlaceholder.style.display = 'block';
+                dataInfo.textContent = `Loaded ${billingData.length} billing records for ${customers.length} customers`;
             }
         });
         
-        function loadSampleData() {
-            loading.classList.add('active');
-            statsContainer.style.display = 'none';
-            noData.style.display = 'none';
-            
-            // Simulate loading delay
-            setTimeout(() => {
-                // Create comprehensive sample data based on the structure from the GitHub file
-                allData = generateSampleData();
-                
-                // Extract unique customers
-                customers = new Set(allData.map(row => row.customer));
-                
-                // Update UI
-                updateCustomerList();
-                customerSearch.disabled = false;
-                customerSearch.placeholder = "Search customer name...";
-                customerHelp.style.display = 'block';
-                
-                // Show all data initially
-                displayAllCustomers();
-                
-                loading.classList.remove('active');
-            }, 800);
-        }
+        closeShareModalBtn.addEventListener('click', function() {
+            shareModal.style.display = 'none';
+        });
         
-        function generateSampleData() {
-            const customers = [
-                'JS MINING & CONSTRUCTIONS',
-                'SRI LAKSHMI VENKATESWARA ENTERPRISES',
-                'RAMCO CEMENTS LTD',
-                'VINAYAKA CONSTRUCTIONS',
-                'SRI SAI TRANSPORT',
-                'BHARATH CEMENTS',
-                'KALYANI CONSTRUCTIONS',
-                'MAHESH TRANSPORT'
-            ];
-            
-            const materials = ['10MM', '20MM', '40MM', 'RIVO SAND', 'PLASTIC SAND', 'GRAVEL', 'CRUSHER DUST'];
-            const vehiclePrefixes = ['AP39', 'AP31', 'AP37', 'TS07', 'TS08', 'KA01', 'KA02'];
-            
-            let data = [];
-            let invoiceCounter = 4213;
-            
-            customers.forEach(customer => {
-                // Generate 5-15 records per customer
-                const recordCount = Math.floor(Math.random() * 10) + 5;
-                
-                for (let i = 0; i < recordCount; i++) {
-                    invoiceCounter++;
-                    const date = new Date(2025, 9, Math.floor(Math.random() * 30) + 1); // October 2025
-                    const material = materials[Math.floor(Math.random() * materials.length)];
-                    const qty = parseFloat((Math.random() * 100 + 20).toFixed(2));
-                    const rate = material.includes('SAND') ? 445 : (material === '10MM' ? 315 : 545);
-                    const amount = parseFloat((qty * rate).toFixed(2));
-                    const totalAmount = parseFloat((amount * 1.18).toFixed(2)); // Including 18% GST
-                    
-                    data.push({
-                        date: date.toLocaleDateString('en-GB').split('/').join('-'),
-                        invoiceNo: `SAKPDC00${invoiceCounter}/25-26`,
-                        vehicleNo: `${vehiclePrefixes[Math.floor(Math.random() * vehiclePrefixes.length)]}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
-                        material: material,
-                        qty: qty,
-                        rate: rate,
-                        amount: amount,
-                        totalAmount: totalAmount,
-                        customer: customer
-                    });
-                }
-            });
-            
-            return data;
-        }
+        copyShareBtn.addEventListener('click', copyToClipboard);
         
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            loading.classList.add('active');
-            statsContainer.style.display = 'none';
-            noData.style.display = 'none';
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                setTimeout(() => {
-                    try {
-                        processExcelData(event.target.result, file);
-                    } catch (error) {
-                        alert('Error reading file: ' + error.message);
-                        loading.classList.remove('active');
-                    }
-                }, 500);
-            };
-            
-            if (file.name.endsWith('.csv')) {
-                reader.readAsText(file);
-            } else {
-                reader.readAsArrayBuffer(file);
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === shareModal) {
+                shareModal.style.display = 'none';
             }
-        }
+        });
         
-        function processExcelData(data, file) {
-            try {
-                let workbook;
-                let rawData;
-                
-                if (file.name.endsWith('.csv')) {
-                    // Parse CSV
-                    const lines = data.split('\n');
-                    rawData = lines.map(line => line.split('\t').length > 1 ? line.split('\t') : line.split(','));
-                } else {
-                    // Parse Excel
-                    workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                }
-                
-                allData = [];
-                customers.clear();
-                
-                // Find column indices dynamically
-                const headerRow = rawData[0];
-                const dateIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('date'));
-                const invoiceIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('invoice'));
-                const vehicleIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('vehicle') || h && h.toString().toLowerCase().includes('veh'));
-                const materialIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('material'));
-                const qtyIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('qty') || h && h.toString().toLowerCase().includes('quantity'));
-                const rateIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('rate'));
-                const amountIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('amount'));
-                const totalIndex = headerRow.length - 1; // Usually last column
-                const customerIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('customer') || h && h.toString().toLowerCase().includes('party'));
-                
-                // Process data rows
-                for (let i = 1; i < rawData.length; i++) {
-                    const row = rawData[i];
-                    if (row && row.length >= 8) {
-                        const dataRow = {
-                            date: row[dateIndex] || '',
-                            invoiceNo: row[invoiceIndex] || '',
-                            vehicleNo: row[vehicleIndex] || '',
-                            material: row[materialIndex] || '',
-                            qty: parseFloat(row[qtyIndex]) || 0,
-                            rate: parseFloat(row[rateIndex]) || 0,
-                            amount: parseFloat(row[amountIndex]) || 0,
-                            totalAmount: parseFloat(row[totalIndex]) || 0,
-                            customer: row[customerIndex] || 'Unknown Customer'
-                        };
-                        
-                        if (dataRow.customer && dataRow.customer !== 'Unknown Customer') {
-                            allData.push(dataRow);
-                            customers.add(dataRow.customer);
-                        }
-                    }
-                }
-                
-                // Update UI
-                updateCustomerList();
-                customerSearch.disabled = false;
-                customerSearch.placeholder = "Search customer name...";
-                customerHelp.style.display = 'block';
-                
-                // Show all data initially
-                displayAllCustomers();
-                
-                loading.classList.remove('active');
-                
-            } catch (error) {
-                console.error('Error processing data:', error);
-                loading.classList.remove('active');
-                alert('Error processing file. Please check the format. Using sample data instead.');
-                loadSampleData();
-            }
-        }
-        
-        function updateCustomerList() {
-            customerList.innerHTML = '';
-            
-            // Add "All Customers" option
-            const allItem = document.createElement('div');
-            allItem.className = 'customer-item';
-            allItem.innerHTML = '<i class="material-icons" style="vertical-align: middle; margin-right: 10px;">groups</i> All Customers';
-            allItem.addEventListener('click', () => {
-                selectedCustomer = '';
-                customerSearch.value = '';
-                displayAllCustomers();
-                updateCustomerListSelection();
-            });
-            customerList.appendChild(allItem);
-            
-            // Add each customer sorted alphabetically
-            Array.from(customers).sort().forEach(customer => {
-                const item = document.createElement('div');
-                item.className = 'customer-item';
-                item.textContent = customer;
-                item.addEventListener('click', () => {
-                    selectedCustomer = customer;
-                    customerSearch.value = customer;
-                    const filtered = allData.filter(row => row.customer === customer);
-                    displayCustomerData(filtered);
-                    updateCustomerListSelection();
-                    customerList.classList.remove('active');
-                });
-                customerList.appendChild(item);
-            });
-            
-            updateCustomerListSelection();
-        }
-        
-        function updateCustomerListSelection() {
-            document.querySelectorAll('.customer-item').forEach(item => {
-                item.classList.remove('selected');
-                if (selectedCustomer === '' && item.textContent.includes('All Customers')) {
-                    item.classList.add('selected');
-                } else if (item.textContent === selectedCustomer) {
-                    item.classList.add('selected');
-                }
-            });
-        }
-        
-        function handleSearch(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            
-            if (searchTerm) {
-                customerList.classList.add('active');
-                document.querySelectorAll('.customer-item').forEach(item => {
-                    const text = item.textContent.toLowerCase();
-                    item.style.display = text.includes(searchTerm) ? 'block' : 'none';
-                });
-            } else {
-                customerList.classList.remove('active');
-                document.querySelectorAll('.customer-item').forEach(item => {
-                    item.style.display = 'block';
-                });
-            }
-        }
-        
-        function showCustomerList() {
-            if (customers.size > 0) {
-                customerList.classList.add('active');
-            }
-        }
-        
-        function displayAllCustomers() {
-            if (allData.length === 0) {
-                noData.style.display = 'block';
-                statsContainer.style.display = 'none';
-                return;
-            }
-            
-            noData.style.display = 'none';
-            statsContainer.style.display = 'block';
-            
-            // Group data by customer
-            const groupedByCustomer = {};
-            allData.forEach(row => {
-                if (!groupedByCustomer[row.customer]) {
-                    groupedByCustomer[row.customer] = [];
-                }
-                groupedByCustomer[row.customer].push(row);
-            });
-            
-            let tableHTML = '';
-            let grandTotalQty = 0;
-            let grandTotalAmount = 0;
-            
-            // Sort customers alphabetically
-            const sortedCustomers = Object.keys(groupedByCustomer).sort();
-            
-            sortedCustomers.forEach(customer => {
-                const customerData = groupedByCustomer[customer];
-                let customerTotalQty = 0;
-                let customerTotalAmount = 0;
-                
-                // Add customer header row
-                tableHTML += `
-                    <tr class="customer-header">
-                        <td colspan="8">
-                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">person</i>
-                            ${customer}
-                        </td>
-                    </tr>
-                `;
-                
-                // Group customer data by material
-                const groupedByMaterial = {};
-                customerData.forEach(row => {
-                    if (!groupedByMaterial[row.material]) {
-                        groupedByMaterial[row.material] = [];
-                    }
-                    groupedByMaterial[row.material].push(row);
-                });
-                
-                // Sort materials alphabetically
-                const sortedMaterials = Object.keys(groupedByMaterial).sort();
-                
-                sortedMaterials.forEach(material => {
-                    const materialData = groupedByMaterial[material];
-                    let materialTotalQty = 0;
-                    let materialTotalAmount = 0;
-                    
-                    // Add rows for each invoice
-                    materialData.forEach(row => {
-                        materialTotalQty += row.qty;
-                        materialTotalAmount += row.totalAmount;
-                        
-                        tableHTML += `
-                            <tr>
-                                <td>${formatDate(row.date)}</td>
-                                <td>${row.invoiceNo}</td>
-                                <td>${row.vehicleNo}</td>
-                                <td>${row.material}</td>
-                                <td>${row.qty.toFixed(2)}</td>
-                                <td>₹${row.rate.toFixed(2)}</td>
-                                <td>₹${row.amount.toFixed(2)}</td>
-                                <td><strong>₹${row.totalAmount.toFixed(2)}</strong></td>
-                            </tr>
-                        `;
-                    });
-                    
-                    // Add material subtotal
-                    tableHTML += `
-                        <tr class="material-subtotal">
-                            <td colspan="4" style="text-align: right; padding-right: 20px;">
-                                <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px;">summarize</i>
-                                Total for ${material}:
-                            </td>
-                            <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
-                            <td colspan="2"></td>
-                            <td><strong>₹${materialTotalAmount.toFixed(2)}</strong></td>
-                        </tr>
-                    `;
-                    
-                    customerTotalQty += materialTotalQty;
-                    customerTotalAmount += materialTotalAmount;
-                });
-                
-                // Add customer total row
-                tableHTML += `
-                    <tr style="background: #e8f4fd; border-bottom: 2px solid #1a2980;">
-                        <td colspan="4" style="text-align: right; padding-right: 20px; font-weight: bold;">
-                            <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">calculate</i>
-                            Customer Total:
-                        </td>
-                        <td><strong>${customerTotalQty.toFixed(2)}</strong></td>
-                        <td colspan="2"></td>
-                        <td><strong>₹${customerTotalAmount.toFixed(2)}</strong></td>
-                    </tr>
-                    <tr><td colspan="8" style="height: 20px;"></td></tr>
-                `;
-                
-                grandTotalQty += customerTotalQty;
-                grandTotalAmount += customerTotalAmount;
-            });
-            
-            // Add grand total row
-            tableHTML += `
-                <tr class="grand-total">
-                    <td colspan="4" style="text-align: right; padding-right: 20px; font-size: 18px;">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">paid</i>
-                        GRAND TOTAL:
-                    </td>
-                    <td style="font-size: 18px;"><strong>${grandTotalQty.toFixed(2)} Tons</strong></td>
-                    <td colspan="2"></td>
-                    <td style="font-size: 18px;"><strong>₹${grandTotalAmount.toFixed(2)}</strong></td>
-                </tr>
-            `;
-            
-            tableBody.innerHTML = tableHTML;
-            
-            // Update stats
-            document.getElementById('customerName').textContent = 'All Customers';
-            document.getElementById('totalInvoices').textContent = allData.length;
-            document.getElementById('totalQuantity').textContent = `${grandTotalQty.toFixed(2)} Tons`;
-            document.getElementById('totalAmount').textContent = `₹${grandTotalAmount.toFixed(2)}`;
-        }
-        
-        function displayCustomerData(customerData) {
-            if (customerData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No data found for this customer</td></tr>';
-                return;
-            }
-            
-            // Group data by material
-            const groupedByMaterial = {};
-            customerData.forEach(row => {
-                if (!groupedByMaterial[row.material]) {
-                    groupedByMaterial[row.material] = [];
-                }
-                groupedByMaterial[row.material].push(row);
-            });
-            
-            let tableHTML = '';
-            let customerTotalQty = 0;
-            let customerTotalAmount = 0;
-            
-            // Add customer header
-            tableHTML += `
-                <tr class="customer-header">
-                    <td colspan="8">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">person</i>
-                        ${selectedCustomer}
-                    </td>
-                </tr>
-            `;
-            
-            // Sort materials alphabetically
-            const sortedMaterials = Object.keys(groupedByMaterial).sort();
-            
-            sortedMaterials.forEach(material => {
-                const materialData = groupedByMaterial[material];
-                let materialTotalQty = 0;
-                let materialTotalAmount = 0;
-                
-                // Add rows for each invoice
-                materialData.forEach(row => {
-                    materialTotalQty += row.qty;
-                    materialTotalAmount += row.totalAmount;
-                    
-                    tableHTML += `
-                        <tr>
-                            <td>${formatDate(row.date)}</td>
-                            <td>${row.invoiceNo}</td>
-                            <td>${row.vehicleNo}</td>
-                            <td>${row.material}</td>
-                            <td>${row.qty.toFixed(2)}</td>
-                            <td>₹${row.rate.toFixed(2)}</td>
-                            <td>₹${row.amount.toFixed(2)}</td>
-                            <td><strong>₹${row.totalAmount.toFixed(2)}</strong></td>
-                        </tr>
-                    `;
-                });
-                
-                // Add material subtotal
-                tableHTML += `
-                    <tr class="material-subtotal">
-                        <td colspan="4" style="text-align: right; padding-right: 20px;">
-                            <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px;">summarize</i>
-                            Total for ${material}:
-                        </td>
-                        <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
-                        <td colspan="2"></td>
-                        <td><strong>₹${materialTotalAmount.toFixed(2)}</strong></td>
-                    </tr>
-                `;
-                
-                customerTotalQty += materialTotalQty;
-                customerTotalAmount += materialTotalAmount;
-            });
-            
-            // Add customer total row
-            tableHTML += `
-                <tr class="grand-total">
-                    <td colspan="4" style="text-align: right; padding-right: 20px; font-size: 18px;">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">paid</i>
-                        CUSTOMER TOTAL:
-                    </td>
-                    <td style="font-size: 18px;"><strong>${customerTotalQty.toFixed(2)} Tons</strong></td>
-                    <td colspan="2"></td>
-                    <td style="font-size: 18px;"><strong>₹${customerTotalAmount.toFixed(2)}</strong></td>
-                </tr>
-            `;
-            
-            tableBody.innerHTML = tableHTML;
-            
-            // Update stats
-            document.getElementById('customerName').textContent = selectedCustomer;
-            document.getElementById('totalInvoices').textContent = customerData.length;
-            document.getElementById('totalQuantity').textContent = `${customerTotalQty.toFixed(2)} Tons`;
-            document.getElementById('totalAmount').textContent = `₹${customerTotalAmount.toFixed(2)}`;
-        }
-        
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            
-            // Try to parse various date formats
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) {
-                // Try to parse DD-MM-YYYY format
-                const parts = dateStr.toString().split('-');
-                if (parts.length === 3) {
-                    const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1;
-                    const year = parseInt(parts[2], 10);
-                    const parsedDate = new Date(year, month, day);
-                    if (!isNaN(parsedDate.getTime())) {
-                        return parsedDate.toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                    }
-                }
-                return dateStr;
-            }
-            
-            return date.toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-        }
-        
-        // Initialize with sample data on page load for demonstration
-        window.addEventListener('load', loadSampleData);
+        // Initialize the app
+        initApp();
     </script>
 </body>
 </html>
