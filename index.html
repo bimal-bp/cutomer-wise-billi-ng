@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport Data Viewer</title>
+    <title>Transport Billing - Customer Wise View</title>
     <style>
         * {
             margin: 0;
@@ -13,22 +13,22 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 20px;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
         
         .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
             color: white;
             padding: 25px 30px;
             text-align: center;
@@ -47,6 +47,24 @@
             font-size: 32px;
         }
         
+        .instructions {
+            background: #fff9e6;
+            padding: 15px 30px;
+            border-bottom: 1px solid #ffd166;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .instructions a {
+            color: #1a2980;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .instructions a:hover {
+            text-decoration: underline;
+        }
+        
         .controls {
             padding: 25px 30px;
             background: #f8f9fa;
@@ -57,51 +75,41 @@
             align-items: center;
         }
         
-        .file-upload {
+        .load-section {
             flex: 1;
             min-width: 300px;
         }
         
-        .file-input-container {
-            position: relative;
-            background: white;
-            border: 2px dashed #4a6491;
+        .load-button {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+            border: none;
+            padding: 18px 30px;
             border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
             transition: all 0.3s;
         }
         
-        .file-input-container:hover {
-            background: #f0f5ff;
-            border-color: #667eea;
-        }
-        
-        .file-input {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        
-        .upload-icon {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 10px;
+        .load-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 41, 128, 0.3);
         }
         
         .customer-selector {
-            flex: 1;
+            flex: 2;
             min-width: 300px;
         }
         
         .search-box {
             width: 100%;
-            padding: 15px 20px;
+            padding: 18px 20px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 16px;
@@ -111,18 +119,22 @@
         
         .search-box:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #1a2980;
+            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.1);
         }
         
         .customer-list {
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             margin-top: 10px;
             border: 1px solid #e0e0e0;
             border-radius: 10px;
             background: white;
             display: none;
+            position: absolute;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
         
         .customer-list.active {
@@ -130,7 +142,7 @@
         }
         
         .customer-item {
-            padding: 12px 20px;
+            padding: 15px 20px;
             cursor: pointer;
             border-bottom: 1px solid #f0f0f0;
             transition: all 0.2s;
@@ -141,29 +153,51 @@
         }
         
         .customer-item.selected {
-            background: #667eea;
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
             color: white;
         }
         
         .stats {
-            display: flex;
-            justify-content: space-between;
-            background: #f8f9fa;
-            padding: 15px 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            background: white;
+            padding: 20px 30px;
             border-bottom: 1px solid #e0e0e0;
-            font-size: 16px;
-            color: #2c3e50;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .data-container {
+            overflow-x: auto;
+            padding: 20px;
         }
         
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            overflow-x: auto;
-            display: block;
+            min-width: 1000px;
         }
         
         .data-table thead {
-            background: #2c3e50;
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
             color: white;
             position: sticky;
             top: 0;
@@ -174,7 +208,7 @@
             text-align: left;
             font-weight: 600;
             white-space: nowrap;
-            border-right: 1px solid #3a4a5d;
+            border-right: 1px solid rgba(255,255,255,0.1);
         }
         
         .data-table th:last-child {
@@ -184,7 +218,6 @@
         .data-table td {
             padding: 16px 15px;
             border-bottom: 1px solid #e0e0e0;
-            white-space: nowrap;
         }
         
         .data-table tbody tr:hover {
@@ -195,6 +228,29 @@
             background: #fafafa;
         }
         
+        .customer-header {
+            background: #e8f4fd !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .customer-header td {
+            padding: 20px 15px;
+            border-bottom: 2px solid #1a2980;
+        }
+        
+        .material-subtotal {
+            background: #f0fff0 !important;
+            font-weight: 600;
+        }
+        
+        .grand-total {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%) !important;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
         .no-data {
             text-align: center;
             padding: 60px 20px;
@@ -202,23 +258,11 @@
             font-size: 18px;
         }
         
-        .total-row {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .highlight-row {
-            background: #fff8e1 !important;
-            font-weight: 600;
-        }
-        
         .loading {
             display: none;
             text-align: center;
             padding: 40px;
-            color: #667eea;
+            color: #1a2980;
         }
         
         .loading.active {
@@ -227,7 +271,7 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #1a2980;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -263,42 +307,47 @@
                 flex-direction: column;
             }
             
-            .file-upload, .customer-selector {
+            .load-section, .customer-selector {
                 min-width: 100%;
             }
             
-            .data-table {
-                font-size: 14px;
-            }
-            
-            .data-table th, .data-table td {
-                padding: 12px 8px;
+            .stats {
+                grid-template-columns: 1fr;
             }
         }
     </style>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>
                 <i class="material-icons">local_shipping</i>
-                Transport Data Management System
+                Transport Billing - Customer Wise View
             </h1>
-            <p>Upload Excel file and filter by customer to view transport records</p>
+            <p>View and analyze transport billing data for individual customers</p>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>Note:</strong> This application simulates loading data from the GitHub Excel file. To use with actual data:</p>
+            <p>1. Download the file from: <a href="https://github.com/bimal-bp/cutomer-wise-billi-ng/blob/main/OCT-TRANS-BILL.xlsx" target="_blank">OCT-TRANS-BILL.xlsx</a></p>
+            <p>2. Save it locally and upload using the button below, OR</p>
+            <p>3. Click "Load Sample Data" to see the application in action with sample data</p>
         </div>
         
         <div class="controls">
-            <div class="file-upload">
-                <label class="file-input-container" id="uploadArea">
-                    <div class="upload-icon">
-                        <i class="material-icons">cloud_upload</i>
-                    </div>
-                    <h3>Upload Excel File</h3>
-                    <p>Click here or drag & drop your Excel file (.xlsx, .xls, .csv)</p>
-                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
-                </label>
-                <div id="fileName" style="margin-top: 10px; color: #666;"></div>
+            <div class="load-section">
+                <button class="load-button" id="loadSampleBtn">
+                    <i class="material-icons">play_circle</i>
+                    Load Sample Data
+                </button>
+                <p style="margin-top: 10px; text-align: center; color: #666; font-size: 14px;">or</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                <button class="load-button" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); margin-top: 10px;" onclick="document.getElementById('fileInput').click()">
+                    <i class="material-icons">upload</i>
+                    Upload Your Excel File
+                </button>
             </div>
             
             <div class="customer-selector">
@@ -308,42 +357,63 @@
                        placeholder="Search customer name..." 
                        disabled>
                 <div id="customerList" class="customer-list"></div>
+                <p id="customerHelp" style="margin-top: 10px; color: #666; font-size: 14px; display: none;">
+                    <i class="material-icons" style="vertical-align: middle; font-size: 16px;">info</i>
+                    Select a customer to view their detailed billing information
+                </p>
             </div>
-        </div>
-        
-        <div class="stats" id="stats" style="display: none;">
-            <div id="customerStats"></div>
-            <div id="recordStats"></div>
         </div>
         
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Processing data...</p>
+            <p>Loading and processing data...</p>
         </div>
         
-        <div id="dataContainer">
-            <table class="data-table" id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Invoice No</th>
-                        <th>Vehicle No</th>
-                        <th>Material</th>
-                        <th>Qty (Tons)</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                        <th>Total Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Data will be inserted here -->
-                </tbody>
-            </table>
-            <div class="no-data" id="noData">
-                <i class="material-icons" style="font-size: 60px; margin-bottom: 20px; color: #ccc;">description</i>
-                <h3>No Data Loaded</h3>
-                <p>Upload an Excel file to begin</p>
+        <div id="statsContainer" style="display: none;">
+            <div class="stats">
+                <div class="stat-card">
+                    <h3><i class="material-icons" style="vertical-align: middle;">person</i> SELECTED CUSTOMER</h3>
+                    <div class="value" id="customerName">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="material-icons" style="vertical-align: middle;">receipt</i> TOTAL INVOICES</h3>
+                    <div class="value" id="totalInvoices">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="material-icons" style="vertical-align: middle;">scale</i> TOTAL QUANTITY</h3>
+                    <div class="value" id="totalQuantity">0.00 Tons</div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="material-icons" style="vertical-align: middle;">payments</i> TOTAL AMOUNT</h3>
+                    <div class="value" id="totalAmount">₹0.00</div>
+                </div>
             </div>
+            
+            <div class="data-container">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice No</th>
+                            <th>Vehicle No</th>
+                            <th>Material</th>
+                            <th>Qty (Tons)</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="no-data" id="noData">
+            <i class="material-icons" style="font-size: 60px; margin-bottom: 20px; color: #ccc;">description</i>
+            <h3>No Data Loaded</h3>
+            <p>Click "Load Sample Data" or upload your Excel file to begin</p>
         </div>
     </div>
 
@@ -353,50 +423,120 @@
         let customers = new Set();
         let selectedCustomer = '';
         
-        // File upload handling
-        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-        document.getElementById('uploadArea').addEventListener('dragover', handleDragOver);
-        document.getElementById('uploadArea').addEventListener('drop', handleDrop);
-        document.getElementById('customerSearch').addEventListener('input', handleSearch);
-        document.getElementById('customerSearch').addEventListener('focus', showCustomerList);
+        // DOM elements
+        const loadSampleBtn = document.getElementById('loadSampleBtn');
+        const fileInput = document.getElementById('fileInput');
+        const customerSearch = document.getElementById('customerSearch');
+        const customerList = document.getElementById('customerList');
+        const customerHelp = document.getElementById('customerHelp');
+        const loading = document.getElementById('loading');
+        const statsContainer = document.getElementById('statsContainer');
+        const noData = document.getElementById('noData');
+        const tableBody = document.getElementById('tableBody');
         
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('uploadArea').style.background = '#f0f5ff';
-            document.getElementById('uploadArea').style.borderColor = '#667eea';
+        // Event Listeners
+        loadSampleBtn.addEventListener('click', loadSampleData);
+        fileInput.addEventListener('change', handleFileUpload);
+        customerSearch.addEventListener('input', handleSearch);
+        customerSearch.addEventListener('focus', showCustomerList);
+        
+        // Close customer list when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.customer-selector')) {
+                customerList.classList.remove('active');
+            }
+        });
+        
+        function loadSampleData() {
+            loading.classList.add('active');
+            statsContainer.style.display = 'none';
+            noData.style.display = 'none';
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                // Create comprehensive sample data based on the structure from the GitHub file
+                allData = generateSampleData();
+                
+                // Extract unique customers
+                customers = new Set(allData.map(row => row.customer));
+                
+                // Update UI
+                updateCustomerList();
+                customerSearch.disabled = false;
+                customerSearch.placeholder = "Search customer name...";
+                customerHelp.style.display = 'block';
+                
+                // Show all data initially
+                displayAllCustomers();
+                
+                loading.classList.remove('active');
+            }, 800);
         }
         
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('uploadArea').style.background = 'white';
-            document.getElementById('uploadArea').style.borderColor = '#4a6491';
+        function generateSampleData() {
+            const customers = [
+                'JS MINING & CONSTRUCTIONS',
+                'SRI LAKSHMI VENKATESWARA ENTERPRISES',
+                'RAMCO CEMENTS LTD',
+                'VINAYAKA CONSTRUCTIONS',
+                'SRI SAI TRANSPORT',
+                'BHARATH CEMENTS',
+                'KALYANI CONSTRUCTIONS',
+                'MAHESH TRANSPORT'
+            ];
             
-            const files = e.dataTransfer.files;
-            if (files.length) {
-                document.getElementById('fileInput').files = files;
-                handleFileUpload({ target: document.getElementById('fileInput') });
-            }
+            const materials = ['10MM', '20MM', '40MM', 'RIVO SAND', 'PLASTIC SAND', 'GRAVEL', 'CRUSHER DUST'];
+            const vehiclePrefixes = ['AP39', 'AP31', 'AP37', 'TS07', 'TS08', 'KA01', 'KA02'];
+            
+            let data = [];
+            let invoiceCounter = 4213;
+            
+            customers.forEach(customer => {
+                // Generate 5-15 records per customer
+                const recordCount = Math.floor(Math.random() * 10) + 5;
+                
+                for (let i = 0; i < recordCount; i++) {
+                    invoiceCounter++;
+                    const date = new Date(2025, 9, Math.floor(Math.random() * 30) + 1); // October 2025
+                    const material = materials[Math.floor(Math.random() * materials.length)];
+                    const qty = parseFloat((Math.random() * 100 + 20).toFixed(2));
+                    const rate = material.includes('SAND') ? 445 : (material === '10MM' ? 315 : 545);
+                    const amount = parseFloat((qty * rate).toFixed(2));
+                    const totalAmount = parseFloat((amount * 1.18).toFixed(2)); // Including 18% GST
+                    
+                    data.push({
+                        date: date.toLocaleDateString('en-GB').split('/').join('-'),
+                        invoiceNo: `SAKPDC00${invoiceCounter}/25-26`,
+                        vehicleNo: `${vehiclePrefixes[Math.floor(Math.random() * vehiclePrefixes.length)]}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
+                        material: material,
+                        qty: qty,
+                        rate: rate,
+                        amount: amount,
+                        totalAmount: totalAmount,
+                        customer: customer
+                    });
+                }
+            });
+            
+            return data;
         }
         
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            document.getElementById('fileName').innerHTML = 
-                `<strong>Selected file:</strong> ${file.name}`;
-            document.getElementById('loading').classList.add('active');
-            document.getElementById('noData').style.display = 'none';
+            loading.classList.add('active');
+            statsContainer.style.display = 'none';
+            noData.style.display = 'none';
             
             const reader = new FileReader();
             reader.onload = function(event) {
                 setTimeout(() => {
                     try {
-                        processExcelData(event.target.result);
+                        processExcelData(event.target.result, file);
                     } catch (error) {
                         alert('Error reading file: ' + error.message);
-                        document.getElementById('loading').classList.remove('active');
+                        loading.classList.remove('active');
                     }
                 }, 500);
             };
@@ -408,112 +548,106 @@
             }
         }
         
-        function processExcelData(data) {
+        function processExcelData(data, file) {
             try {
                 let workbook;
-                if (document.getElementById('fileInput').files[0].name.endsWith('.csv')) {
+                let rawData;
+                
+                if (file.name.endsWith('.csv')) {
                     // Parse CSV
                     const lines = data.split('\n');
-                    const headers = lines[0].split('\t').length > 1 ? lines[0].split('\t') : lines[0].split(',');
-                    
-                    allData = [];
-                    customers.clear();
-                    
-                    for (let i = 1; i < lines.length; i++) {
-                        if (lines[i].trim()) {
-                            const rowData = lines[i].split('\t').length > 1 ? lines[i].split('\t') : lines[i].split(',');
-                            if (rowData.length >= 15) {
-                                const row = {
-                                    date: rowData[0] || rowData[1],
-                                    invoiceNo: rowData[3],
-                                    vehicleNo: rowData[10],
-                                    material: rowData[11],
-                                    qty: parseFloat(rowData[12]) || 0,
-                                    rate: parseFloat(rowData[15]) || 0,
-                                    amount: parseFloat(rowData[16]) || 0,
-                                    totalAmount: parseFloat(rowData[rowData.length - 1]) || 0,
-                                    customer: rowData[7]
-                                };
-                                allData.push(row);
-                                customers.add(row.customer);
-                            }
-                        }
-                    }
+                    rawData = lines.map(line => line.split('\t').length > 1 ? line.split('\t') : line.split(','));
                 } else {
                     // Parse Excel
-                    workbook = XLSX.read(data, { type: 'binary' });
+                    workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    
-                    allData = [];
-                    customers.clear();
-                    
-                    // Assuming first row is header
-                    for (let i = 1; i < rawData.length; i++) {
-                        const row = rawData[i];
-                        if (row && row.length >= 15) {
-                            const dataRow = {
-                                date: row[0] || row[1],
-                                invoiceNo: row[3],
-                                vehicleNo: row[10],
-                                material: row[11],
-                                qty: parseFloat(row[12]) || 0,
-                                rate: parseFloat(row[15]) || 0,
-                                amount: parseFloat(row[16]) || 0,
-                                totalAmount: parseFloat(row[row.length - 1]) || 0,
-                                customer: row[7]
-                            };
+                    rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                }
+                
+                allData = [];
+                customers.clear();
+                
+                // Find column indices dynamically
+                const headerRow = rawData[0];
+                const dateIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('date'));
+                const invoiceIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('invoice'));
+                const vehicleIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('vehicle') || h && h.toString().toLowerCase().includes('veh'));
+                const materialIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('material'));
+                const qtyIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('qty') || h && h.toString().toLowerCase().includes('quantity'));
+                const rateIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('rate'));
+                const amountIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('amount'));
+                const totalIndex = headerRow.length - 1; // Usually last column
+                const customerIndex = headerRow.findIndex(h => h && h.toString().toLowerCase().includes('customer') || h && h.toString().toLowerCase().includes('party'));
+                
+                // Process data rows
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (row && row.length >= 8) {
+                        const dataRow = {
+                            date: row[dateIndex] || '',
+                            invoiceNo: row[invoiceIndex] || '',
+                            vehicleNo: row[vehicleIndex] || '',
+                            material: row[materialIndex] || '',
+                            qty: parseFloat(row[qtyIndex]) || 0,
+                            rate: parseFloat(row[rateIndex]) || 0,
+                            amount: parseFloat(row[amountIndex]) || 0,
+                            totalAmount: parseFloat(row[totalIndex]) || 0,
+                            customer: row[customerIndex] || 'Unknown Customer'
+                        };
+                        
+                        if (dataRow.customer && dataRow.customer !== 'Unknown Customer') {
                             allData.push(dataRow);
                             customers.add(dataRow.customer);
                         }
                     }
                 }
                 
-                // Update customer list
+                // Update UI
                 updateCustomerList();
-                document.getElementById('customerSearch').disabled = false;
-                document.getElementById('customerSearch').placeholder = "Search customer name...";
+                customerSearch.disabled = false;
+                customerSearch.placeholder = "Search customer name...";
+                customerHelp.style.display = 'block';
                 
                 // Show all data initially
-                displayData(allData);
+                displayAllCustomers();
                 
-                document.getElementById('loading').classList.remove('active');
+                loading.classList.remove('active');
                 
             } catch (error) {
                 console.error('Error processing data:', error);
-                document.getElementById('loading').classList.remove('active');
-                alert('Error processing file. Please check the format.');
+                loading.classList.remove('active');
+                alert('Error processing file. Please check the format. Using sample data instead.');
+                loadSampleData();
             }
         }
         
         function updateCustomerList() {
-            const customerList = document.getElementById('customerList');
             customerList.innerHTML = '';
             
             // Add "All Customers" option
             const allItem = document.createElement('div');
             allItem.className = 'customer-item';
-            allItem.textContent = 'All Customers';
+            allItem.innerHTML = '<i class="material-icons" style="vertical-align: middle; margin-right: 10px;">groups</i> All Customers';
             allItem.addEventListener('click', () => {
                 selectedCustomer = '';
-                document.getElementById('customerSearch').value = '';
-                displayData(allData);
+                customerSearch.value = '';
+                displayAllCustomers();
                 updateCustomerListSelection();
             });
             customerList.appendChild(allItem);
             
-            // Add each customer
+            // Add each customer sorted alphabetically
             Array.from(customers).sort().forEach(customer => {
                 const item = document.createElement('div');
                 item.className = 'customer-item';
                 item.textContent = customer;
                 item.addEventListener('click', () => {
                     selectedCustomer = customer;
-                    document.getElementById('customerSearch').value = customer;
+                    customerSearch.value = customer;
                     const filtered = allData.filter(row => row.customer === customer);
-                    displayData(filtered);
+                    displayCustomerData(filtered);
                     updateCustomerListSelection();
-                    document.getElementById('customerList').classList.remove('active');
+                    customerList.classList.remove('active');
                 });
                 customerList.appendChild(item);
             });
@@ -524,7 +658,7 @@
         function updateCustomerListSelection() {
             document.querySelectorAll('.customer-item').forEach(item => {
                 item.classList.remove('selected');
-                if (selectedCustomer === '' && item.textContent === 'All Customers') {
+                if (selectedCustomer === '' && item.textContent.includes('All Customers')) {
                     item.classList.add('selected');
                 } else if (item.textContent === selectedCustomer) {
                     item.classList.add('selected');
@@ -534,7 +668,6 @@
         
         function handleSearch(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const customerList = document.getElementById('customerList');
             
             if (searchTerm) {
                 customerList.classList.add('active');
@@ -551,123 +684,263 @@
         }
         
         function showCustomerList() {
-            const customerList = document.getElementById('customerList');
             if (customers.size > 0) {
                 customerList.classList.add('active');
             }
         }
         
-        // Close customer list when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.customer-selector')) {
-                document.getElementById('customerList').classList.remove('active');
-            }
-        });
-        
-        function displayData(data) {
-            const tableBody = document.getElementById('tableBody');
-            const noData = document.getElementById('noData');
-            const stats = document.getElementById('stats');
-            
-            if (data.length === 0) {
-                tableBody.innerHTML = '';
+        function displayAllCustomers() {
+            if (allData.length === 0) {
                 noData.style.display = 'block';
-                stats.style.display = 'none';
+                statsContainer.style.display = 'none';
                 return;
             }
             
             noData.style.display = 'none';
-            stats.style.display = 'flex';
+            statsContainer.style.display = 'block';
             
-            // Group data by material
-            const groupedData = {};
-            data.forEach(row => {
-                const material = row.material || 'Unknown';
-                if (!groupedData[material]) {
-                    groupedData[material] = [];
+            // Group data by customer
+            const groupedByCustomer = {};
+            allData.forEach(row => {
+                if (!groupedByCustomer[row.customer]) {
+                    groupedByCustomer[row.customer] = [];
                 }
-                groupedData[material].push(row);
+                groupedByCustomer[row.customer].push(row);
             });
             
             let tableHTML = '';
             let grandTotalQty = 0;
             let grandTotalAmount = 0;
             
-            Object.keys(groupedData).forEach(material => {
-                let materialTotalQty = 0;
-                let materialTotalAmount = 0;
+            // Sort customers alphabetically
+            const sortedCustomers = Object.keys(groupedByCustomer).sort();
+            
+            sortedCustomers.forEach(customer => {
+                const customerData = groupedByCustomer[customer];
+                let customerTotalQty = 0;
+                let customerTotalAmount = 0;
                 
-                // Add material header row
+                // Add customer header row
                 tableHTML += `
-                    <tr class="highlight-row">
-                        <td colspan="8" style="text-align: left; padding-left: 20px; font-weight: bold; background: #e8f4fd;">
-                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px; font-size: 20px;">category</i>
-                            ${material}
+                    <tr class="customer-header">
+                        <td colspan="8">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">person</i>
+                            ${customer}
                         </td>
                     </tr>
                 `;
                 
-                // Add rows for this material
-                groupedData[material].forEach((row, index) => {
-                    materialTotalQty += row.qty;
-                    materialTotalAmount += row.totalAmount;
-                    
-                    tableHTML += `
-                        <tr>
-                            <td>${formatDate(row.date)}</td>
-                            <td>${row.invoiceNo || ''}</td>
-                            <td>${row.vehicleNo || ''}</td>
-                            <td>${row.material || ''}</td>
-                            <td>${row.qty.toFixed(2)}</td>
-                            <td>${row.rate.toFixed(2)}</td>
-                            <td>${row.amount.toFixed(2)}</td>
-                            <td><strong>${row.totalAmount.toFixed(2)}</strong></td>
-                        </tr>
-                    `;
+                // Group customer data by material
+                const groupedByMaterial = {};
+                customerData.forEach(row => {
+                    if (!groupedByMaterial[row.material]) {
+                        groupedByMaterial[row.material] = [];
+                    }
+                    groupedByMaterial[row.material].push(row);
                 });
                 
-                // Add subtotal for this material
+                // Sort materials alphabetically
+                const sortedMaterials = Object.keys(groupedByMaterial).sort();
+                
+                sortedMaterials.forEach(material => {
+                    const materialData = groupedByMaterial[material];
+                    let materialTotalQty = 0;
+                    let materialTotalAmount = 0;
+                    
+                    // Add rows for each invoice
+                    materialData.forEach(row => {
+                        materialTotalQty += row.qty;
+                        materialTotalAmount += row.totalAmount;
+                        
+                        tableHTML += `
+                            <tr>
+                                <td>${formatDate(row.date)}</td>
+                                <td>${row.invoiceNo}</td>
+                                <td>${row.vehicleNo}</td>
+                                <td>${row.material}</td>
+                                <td>${row.qty.toFixed(2)}</td>
+                                <td>₹${row.rate.toFixed(2)}</td>
+                                <td>₹${row.amount.toFixed(2)}</td>
+                                <td><strong>₹${row.totalAmount.toFixed(2)}</strong></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    // Add material subtotal
+                    tableHTML += `
+                        <tr class="material-subtotal">
+                            <td colspan="4" style="text-align: right; padding-right: 20px;">
+                                <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px;">summarize</i>
+                                Total for ${material}:
+                            </td>
+                            <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
+                            <td colspan="2"></td>
+                            <td><strong>₹${materialTotalAmount.toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                    
+                    customerTotalQty += materialTotalQty;
+                    customerTotalAmount += materialTotalAmount;
+                });
+                
+                // Add customer total row
                 tableHTML += `
-                    <tr class="total-row">
-                        <td colspan="4" style="text-align: right;">Total for ${material}:</td>
-                        <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
+                    <tr style="background: #e8f4fd; border-bottom: 2px solid #1a2980;">
+                        <td colspan="4" style="text-align: right; padding-right: 20px; font-weight: bold;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">calculate</i>
+                            Customer Total:
+                        </td>
+                        <td><strong>${customerTotalQty.toFixed(2)}</strong></td>
                         <td colspan="2"></td>
-                        <td><strong>${materialTotalAmount.toFixed(2)}</strong></td>
+                        <td><strong>₹${customerTotalAmount.toFixed(2)}</strong></td>
                     </tr>
+                    <tr><td colspan="8" style="height: 20px;"></td></tr>
                 `;
                 
-                grandTotalQty += materialTotalQty;
-                grandTotalAmount += materialTotalAmount;
+                grandTotalQty += customerTotalQty;
+                grandTotalAmount += customerTotalAmount;
             });
             
             // Add grand total row
             tableHTML += `
-                <tr class="total-row" style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%) !important;">
-                    <td colspan="4" style="text-align: right; font-size: 18px;">
-                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">summarize</i>
+                <tr class="grand-total">
+                    <td colspan="4" style="text-align: right; padding-right: 20px; font-size: 18px;">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">paid</i>
                         GRAND TOTAL:
                     </td>
-                    <td style="font-size: 18px;"><strong>${grandTotalQty.toFixed(2)}</strong></td>
+                    <td style="font-size: 18px;"><strong>${grandTotalQty.toFixed(2)} Tons</strong></td>
                     <td colspan="2"></td>
-                    <td style="font-size: 18px;"><strong>${grandTotalAmount.toFixed(2)}</strong></td>
+                    <td style="font-size: 18px;"><strong>₹${grandTotalAmount.toFixed(2)}</strong></td>
                 </tr>
             `;
             
             tableBody.innerHTML = tableHTML;
             
             // Update stats
-            const customerName = selectedCustomer || 'All Customers';
-            document.getElementById('customerStats').innerHTML = 
-                `<strong>Customer:</strong> ${customerName}`;
-            document.getElementById('recordStats').innerHTML = 
-                `<strong>Total Records:</strong> ${data.length} | <strong>Total Amount:</strong> ₹${grandTotalAmount.toFixed(2)}`;
+            document.getElementById('customerName').textContent = 'All Customers';
+            document.getElementById('totalInvoices').textContent = allData.length;
+            document.getElementById('totalQuantity').textContent = `${grandTotalQty.toFixed(2)} Tons`;
+            document.getElementById('totalAmount').textContent = `₹${grandTotalAmount.toFixed(2)}`;
+        }
+        
+        function displayCustomerData(customerData) {
+            if (customerData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No data found for this customer</td></tr>';
+                return;
+            }
+            
+            // Group data by material
+            const groupedByMaterial = {};
+            customerData.forEach(row => {
+                if (!groupedByMaterial[row.material]) {
+                    groupedByMaterial[row.material] = [];
+                }
+                groupedByMaterial[row.material].push(row);
+            });
+            
+            let tableHTML = '';
+            let customerTotalQty = 0;
+            let customerTotalAmount = 0;
+            
+            // Add customer header
+            tableHTML += `
+                <tr class="customer-header">
+                    <td colspan="8">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">person</i>
+                        ${selectedCustomer}
+                    </td>
+                </tr>
+            `;
+            
+            // Sort materials alphabetically
+            const sortedMaterials = Object.keys(groupedByMaterial).sort();
+            
+            sortedMaterials.forEach(material => {
+                const materialData = groupedByMaterial[material];
+                let materialTotalQty = 0;
+                let materialTotalAmount = 0;
+                
+                // Add rows for each invoice
+                materialData.forEach(row => {
+                    materialTotalQty += row.qty;
+                    materialTotalAmount += row.totalAmount;
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${formatDate(row.date)}</td>
+                            <td>${row.invoiceNo}</td>
+                            <td>${row.vehicleNo}</td>
+                            <td>${row.material}</td>
+                            <td>${row.qty.toFixed(2)}</td>
+                            <td>₹${row.rate.toFixed(2)}</td>
+                            <td>₹${row.amount.toFixed(2)}</td>
+                            <td><strong>₹${row.totalAmount.toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                // Add material subtotal
+                tableHTML += `
+                    <tr class="material-subtotal">
+                        <td colspan="4" style="text-align: right; padding-right: 20px;">
+                            <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px;">summarize</i>
+                            Total for ${material}:
+                        </td>
+                        <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
+                        <td colspan="2"></td>
+                        <td><strong>₹${materialTotalAmount.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+                
+                customerTotalQty += materialTotalQty;
+                customerTotalAmount += materialTotalAmount;
+            });
+            
+            // Add customer total row
+            tableHTML += `
+                <tr class="grand-total">
+                    <td colspan="4" style="text-align: right; padding-right: 20px; font-size: 18px;">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">paid</i>
+                        CUSTOMER TOTAL:
+                    </td>
+                    <td style="font-size: 18px;"><strong>${customerTotalQty.toFixed(2)} Tons</strong></td>
+                    <td colspan="2"></td>
+                    <td style="font-size: 18px;"><strong>₹${customerTotalAmount.toFixed(2)}</strong></td>
+                </tr>
+            `;
+            
+            tableBody.innerHTML = tableHTML;
+            
+            // Update stats
+            document.getElementById('customerName').textContent = selectedCustomer;
+            document.getElementById('totalInvoices').textContent = customerData.length;
+            document.getElementById('totalQuantity').textContent = `${customerTotalQty.toFixed(2)} Tons`;
+            document.getElementById('totalAmount').textContent = `₹${customerTotalAmount.toFixed(2)}`;
         }
         
         function formatDate(dateStr) {
             if (!dateStr) return '';
+            
             // Try to parse various date formats
             const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
+            if (isNaN(date.getTime())) {
+                // Try to parse DD-MM-YYYY format
+                const parts = dateStr.toString().split('-');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const year = parseInt(parts[2], 10);
+                    const parsedDate = new Date(year, month, day);
+                    if (!isNaN(parsedDate.getTime())) {
+                        return parsedDate.toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    }
+                }
+                return dateStr;
+            }
             
             return date.toLocaleDateString('en-IN', {
                 day: '2-digit',
@@ -676,151 +949,8 @@
             });
         }
         
-        // Load sample data on page load for demonstration
-        window.addEventListener('load', () => {
-            // Create sample data based on your provided data
-            const sampleData = [
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004213/25-26',
-                    vehicleNo: 'AP39WH3659',
-                    material: '10MM',
-                    qty: 64.8,
-                    rate: 315,
-                    amount: 14459,
-                    totalAmount: 33048,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004206/25-26',
-                    vehicleNo: 'AP39VE2979',
-                    material: '20MM',
-                    qty: 61.02,
-                    rate: 545,
-                    amount: 24580,
-                    totalAmount: 42845,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004207/25-26',
-                    vehicleNo: 'AP39W0505',
-                    material: '20MM',
-                    qty: 60.38,
-                    rate: 545,
-                    amount: 24492,
-                    totalAmount: 42693,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004209/25-26',
-                    vehicleNo: 'AP39TV2537',
-                    material: '20MM',
-                    qty: 64.88,
-                    rate: 545,
-                    amount: 26552,
-                    totalAmount: 46284,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004210/25-26',
-                    vehicleNo: 'AP39WD4199',
-                    material: '20MM',
-                    qty: 67.34,
-                    rate: 545,
-                    amount: 27860,
-                    totalAmount: 48564,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004216/25-26',
-                    vehicleNo: 'AP39WB2536',
-                    material: '20MM',
-                    qty: 67.42,
-                    rate: 545,
-                    amount: 26847,
-                    totalAmount: 46797,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004218/25-26',
-                    vehicleNo: 'AP39UZ3335',
-                    material: 'RIVO SAND',
-                    qty: 66.68,
-                    rate: 445,
-                    amount: 22624,
-                    totalAmount: 43214,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004208/25-26',
-                    vehicleNo: 'AP39TV2536',
-                    material: 'RIVO SAND',
-                    qty: 66.60,
-                    rate: 445,
-                    amount: 22214,
-                    totalAmount: 42432,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004215/25-26',
-                    vehicleNo: 'AP39UJ2669',
-                    material: 'RIVO SAND',
-                    qty: 66.84,
-                    rate: 445,
-                    amount: 22748,
-                    totalAmount: 43452,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004212/25-26',
-                    vehicleNo: 'AP39WH1869',
-                    material: 'RIVO SAND',
-                    qty: 65.28,
-                    rate: 445,
-                    amount: 21939,
-                    totalAmount: 41905,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004214/25-26',
-                    vehicleNo: 'AP31TN2579',
-                    material: 'RIVO SAND',
-                    qty: 54.7,
-                    rate: 445,
-                    amount: 19028,
-                    totalAmount: 36346,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                },
-                {
-                    date: '03-10-2025',
-                    invoiceNo: 'SAKPDC004217/25-26',
-                    vehicleNo: 'AP39UW2589',
-                    material: '10MM',
-                    qty: 58.44,
-                    rate: 315,
-                    amount: 13690,
-                    totalAmount: 31291,
-                    customer: 'JS MINING &CONSTRUCTIONS'
-                }
-            ];
-            
-            allData = sampleData;
-            customers = new Set(sampleData.map(row => row.customer));
-            updateCustomerList();
-            document.getElementById('customerSearch').disabled = false;
-            document.getElementById('customerSearch').placeholder = "Search customer name...";
-            displayData(allData);
-        });
+        // Initialize with sample data on page load for demonstration
+        window.addEventListener('load', loadSampleData);
     </script>
 </body>
 </html>
