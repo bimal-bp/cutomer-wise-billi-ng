@@ -1,1 +1,826 @@
-<h>Hii</h>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transport Data Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header h1 i {
+            font-size: 32px;
+        }
+        
+        .controls {
+            padding: 25px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .file-upload {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .file-input-container {
+            position: relative;
+            background: white;
+            border: 2px dashed #4a6491;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-container:hover {
+            background: #f0f5ff;
+            border-color: #667eea;
+        }
+        
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .customer-selector {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .customer-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            display: none;
+        }
+        
+        .customer-list.active {
+            display: block;
+        }
+        
+        .customer-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+        
+        .customer-item:hover {
+            background: #f0f5ff;
+        }
+        
+        .customer-item.selected {
+            background: #667eea;
+            color: white;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+        }
+        
+        .data-table thead {
+            background: #2c3e50;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            border-right: 1px solid #3a4a5d;
+        }
+        
+        .data-table th:last-child {
+            border-right: none;
+        }
+        
+        .data-table td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            white-space: nowrap;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .total-row {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .highlight-row {
+            background: #fff8e1 !important;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: 'liga';
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .file-upload, .customer-selector {
+                min-width: 100%;
+            }
+            
+            .data-table {
+                font-size: 14px;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="material-icons">local_shipping</i>
+                Transport Data Management System
+            </h1>
+            <p>Upload Excel file and filter by customer to view transport records</p>
+        </div>
+        
+        <div class="controls">
+            <div class="file-upload">
+                <label class="file-input-container" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="material-icons">cloud_upload</i>
+                    </div>
+                    <h3>Upload Excel File</h3>
+                    <p>Click here or drag & drop your Excel file (.xlsx, .xls, .csv)</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+                </label>
+                <div id="fileName" style="margin-top: 10px; color: #666;"></div>
+            </div>
+            
+            <div class="customer-selector">
+                <input type="text" 
+                       id="customerSearch" 
+                       class="search-box" 
+                       placeholder="Search customer name..." 
+                       disabled>
+                <div id="customerList" class="customer-list"></div>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div id="customerStats"></div>
+            <div id="recordStats"></div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing data...</p>
+        </div>
+        
+        <div id="dataContainer">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Invoice No</th>
+                        <th>Vehicle No</th>
+                        <th>Material</th>
+                        <th>Qty (Tons)</th>
+                        <th>Rate</th>
+                        <th>Amount</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+            <div class="no-data" id="noData">
+                <i class="material-icons" style="font-size: 60px; margin-bottom: 20px; color: #ccc;">description</i>
+                <h3>No Data Loaded</h3>
+                <p>Upload an Excel file to begin</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let allData = [];
+        let customers = new Set();
+        let selectedCustomer = '';
+        
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        document.getElementById('uploadArea').addEventListener('dragover', handleDragOver);
+        document.getElementById('uploadArea').addEventListener('drop', handleDrop);
+        document.getElementById('customerSearch').addEventListener('input', handleSearch);
+        document.getElementById('customerSearch').addEventListener('focus', showCustomerList);
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').style.background = '#f0f5ff';
+            document.getElementById('uploadArea').style.borderColor = '#667eea';
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').style.background = 'white';
+            document.getElementById('uploadArea').style.borderColor = '#4a6491';
+            
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({ target: document.getElementById('fileInput') });
+            }
+        }
+        
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('fileName').innerHTML = 
+                `<strong>Selected file:</strong> ${file.name}`;
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('noData').style.display = 'none';
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                setTimeout(() => {
+                    try {
+                        processExcelData(event.target.result);
+                    } catch (error) {
+                        alert('Error reading file: ' + error.message);
+                        document.getElementById('loading').classList.remove('active');
+                    }
+                }, 500);
+            };
+            
+            if (file.name.endsWith('.csv')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        
+        function processExcelData(data) {
+            try {
+                let workbook;
+                if (document.getElementById('fileInput').files[0].name.endsWith('.csv')) {
+                    // Parse CSV
+                    const lines = data.split('\n');
+                    const headers = lines[0].split('\t').length > 1 ? lines[0].split('\t') : lines[0].split(',');
+                    
+                    allData = [];
+                    customers.clear();
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].trim()) {
+                            const rowData = lines[i].split('\t').length > 1 ? lines[i].split('\t') : lines[i].split(',');
+                            if (rowData.length >= 15) {
+                                const row = {
+                                    date: rowData[0] || rowData[1],
+                                    invoiceNo: rowData[3],
+                                    vehicleNo: rowData[10],
+                                    material: rowData[11],
+                                    qty: parseFloat(rowData[12]) || 0,
+                                    rate: parseFloat(rowData[15]) || 0,
+                                    amount: parseFloat(rowData[16]) || 0,
+                                    totalAmount: parseFloat(rowData[rowData.length - 1]) || 0,
+                                    customer: rowData[7]
+                                };
+                                allData.push(row);
+                                customers.add(row.customer);
+                            }
+                        }
+                    }
+                } else {
+                    // Parse Excel
+                    workbook = XLSX.read(data, { type: 'binary' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    allData = [];
+                    customers.clear();
+                    
+                    // Assuming first row is header
+                    for (let i = 1; i < rawData.length; i++) {
+                        const row = rawData[i];
+                        if (row && row.length >= 15) {
+                            const dataRow = {
+                                date: row[0] || row[1],
+                                invoiceNo: row[3],
+                                vehicleNo: row[10],
+                                material: row[11],
+                                qty: parseFloat(row[12]) || 0,
+                                rate: parseFloat(row[15]) || 0,
+                                amount: parseFloat(row[16]) || 0,
+                                totalAmount: parseFloat(row[row.length - 1]) || 0,
+                                customer: row[7]
+                            };
+                            allData.push(dataRow);
+                            customers.add(dataRow.customer);
+                        }
+                    }
+                }
+                
+                // Update customer list
+                updateCustomerList();
+                document.getElementById('customerSearch').disabled = false;
+                document.getElementById('customerSearch').placeholder = "Search customer name...";
+                
+                // Show all data initially
+                displayData(allData);
+                
+                document.getElementById('loading').classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error processing data:', error);
+                document.getElementById('loading').classList.remove('active');
+                alert('Error processing file. Please check the format.');
+            }
+        }
+        
+        function updateCustomerList() {
+            const customerList = document.getElementById('customerList');
+            customerList.innerHTML = '';
+            
+            // Add "All Customers" option
+            const allItem = document.createElement('div');
+            allItem.className = 'customer-item';
+            allItem.textContent = 'All Customers';
+            allItem.addEventListener('click', () => {
+                selectedCustomer = '';
+                document.getElementById('customerSearch').value = '';
+                displayData(allData);
+                updateCustomerListSelection();
+            });
+            customerList.appendChild(allItem);
+            
+            // Add each customer
+            Array.from(customers).sort().forEach(customer => {
+                const item = document.createElement('div');
+                item.className = 'customer-item';
+                item.textContent = customer;
+                item.addEventListener('click', () => {
+                    selectedCustomer = customer;
+                    document.getElementById('customerSearch').value = customer;
+                    const filtered = allData.filter(row => row.customer === customer);
+                    displayData(filtered);
+                    updateCustomerListSelection();
+                    document.getElementById('customerList').classList.remove('active');
+                });
+                customerList.appendChild(item);
+            });
+            
+            updateCustomerListSelection();
+        }
+        
+        function updateCustomerListSelection() {
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('selected');
+                if (selectedCustomer === '' && item.textContent === 'All Customers') {
+                    item.classList.add('selected');
+                } else if (item.textContent === selectedCustomer) {
+                    item.classList.add('selected');
+                }
+            });
+        }
+        
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const customerList = document.getElementById('customerList');
+            
+            if (searchTerm) {
+                customerList.classList.add('active');
+                document.querySelectorAll('.customer-item').forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                });
+            } else {
+                customerList.classList.remove('active');
+                document.querySelectorAll('.customer-item').forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+        }
+        
+        function showCustomerList() {
+            const customerList = document.getElementById('customerList');
+            if (customers.size > 0) {
+                customerList.classList.add('active');
+            }
+        }
+        
+        // Close customer list when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.customer-selector')) {
+                document.getElementById('customerList').classList.remove('active');
+            }
+        });
+        
+        function displayData(data) {
+            const tableBody = document.getElementById('tableBody');
+            const noData = document.getElementById('noData');
+            const stats = document.getElementById('stats');
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '';
+                noData.style.display = 'block';
+                stats.style.display = 'none';
+                return;
+            }
+            
+            noData.style.display = 'none';
+            stats.style.display = 'flex';
+            
+            // Group data by material
+            const groupedData = {};
+            data.forEach(row => {
+                const material = row.material || 'Unknown';
+                if (!groupedData[material]) {
+                    groupedData[material] = [];
+                }
+                groupedData[material].push(row);
+            });
+            
+            let tableHTML = '';
+            let grandTotalQty = 0;
+            let grandTotalAmount = 0;
+            
+            Object.keys(groupedData).forEach(material => {
+                let materialTotalQty = 0;
+                let materialTotalAmount = 0;
+                
+                // Add material header row
+                tableHTML += `
+                    <tr class="highlight-row">
+                        <td colspan="8" style="text-align: left; padding-left: 20px; font-weight: bold; background: #e8f4fd;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px; font-size: 20px;">category</i>
+                            ${material}
+                        </td>
+                    </tr>
+                `;
+                
+                // Add rows for this material
+                groupedData[material].forEach((row, index) => {
+                    materialTotalQty += row.qty;
+                    materialTotalAmount += row.totalAmount;
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${formatDate(row.date)}</td>
+                            <td>${row.invoiceNo || ''}</td>
+                            <td>${row.vehicleNo || ''}</td>
+                            <td>${row.material || ''}</td>
+                            <td>${row.qty.toFixed(2)}</td>
+                            <td>${row.rate.toFixed(2)}</td>
+                            <td>${row.amount.toFixed(2)}</td>
+                            <td><strong>${row.totalAmount.toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                // Add subtotal for this material
+                tableHTML += `
+                    <tr class="total-row">
+                        <td colspan="4" style="text-align: right;">Total for ${material}:</td>
+                        <td><strong>${materialTotalQty.toFixed(2)}</strong></td>
+                        <td colspan="2"></td>
+                        <td><strong>${materialTotalAmount.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+                
+                grandTotalQty += materialTotalQty;
+                grandTotalAmount += materialTotalAmount;
+            });
+            
+            // Add grand total row
+            tableHTML += `
+                <tr class="total-row" style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%) !important;">
+                    <td colspan="4" style="text-align: right; font-size: 18px;">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">summarize</i>
+                        GRAND TOTAL:
+                    </td>
+                    <td style="font-size: 18px;"><strong>${grandTotalQty.toFixed(2)}</strong></td>
+                    <td colspan="2"></td>
+                    <td style="font-size: 18px;"><strong>${grandTotalAmount.toFixed(2)}</strong></td>
+                </tr>
+            `;
+            
+            tableBody.innerHTML = tableHTML;
+            
+            // Update stats
+            const customerName = selectedCustomer || 'All Customers';
+            document.getElementById('customerStats').innerHTML = 
+                `<strong>Customer:</strong> ${customerName}`;
+            document.getElementById('recordStats').innerHTML = 
+                `<strong>Total Records:</strong> ${data.length} | <strong>Total Amount:</strong> ₹${grandTotalAmount.toFixed(2)}`;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            // Try to parse various date formats
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+        
+        // Load sample data on page load for demonstration
+        window.addEventListener('load', () => {
+            // Create sample data based on your provided data
+            const sampleData = [
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004213/25-26',
+                    vehicleNo: 'AP39WH3659',
+                    material: '10MM',
+                    qty: 64.8,
+                    rate: 315,
+                    amount: 14459,
+                    totalAmount: 33048,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004206/25-26',
+                    vehicleNo: 'AP39VE2979',
+                    material: '20MM',
+                    qty: 61.02,
+                    rate: 545,
+                    amount: 24580,
+                    totalAmount: 42845,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004207/25-26',
+                    vehicleNo: 'AP39W0505',
+                    material: '20MM',
+                    qty: 60.38,
+                    rate: 545,
+                    amount: 24492,
+                    totalAmount: 42693,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004209/25-26',
+                    vehicleNo: 'AP39TV2537',
+                    material: '20MM',
+                    qty: 64.88,
+                    rate: 545,
+                    amount: 26552,
+                    totalAmount: 46284,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004210/25-26',
+                    vehicleNo: 'AP39WD4199',
+                    material: '20MM',
+                    qty: 67.34,
+                    rate: 545,
+                    amount: 27860,
+                    totalAmount: 48564,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004216/25-26',
+                    vehicleNo: 'AP39WB2536',
+                    material: '20MM',
+                    qty: 67.42,
+                    rate: 545,
+                    amount: 26847,
+                    totalAmount: 46797,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004218/25-26',
+                    vehicleNo: 'AP39UZ3335',
+                    material: 'RIVO SAND',
+                    qty: 66.68,
+                    rate: 445,
+                    amount: 22624,
+                    totalAmount: 43214,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004208/25-26',
+                    vehicleNo: 'AP39TV2536',
+                    material: 'RIVO SAND',
+                    qty: 66.60,
+                    rate: 445,
+                    amount: 22214,
+                    totalAmount: 42432,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004215/25-26',
+                    vehicleNo: 'AP39UJ2669',
+                    material: 'RIVO SAND',
+                    qty: 66.84,
+                    rate: 445,
+                    amount: 22748,
+                    totalAmount: 43452,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004212/25-26',
+                    vehicleNo: 'AP39WH1869',
+                    material: 'RIVO SAND',
+                    qty: 65.28,
+                    rate: 445,
+                    amount: 21939,
+                    totalAmount: 41905,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004214/25-26',
+                    vehicleNo: 'AP31TN2579',
+                    material: 'RIVO SAND',
+                    qty: 54.7,
+                    rate: 445,
+                    amount: 19028,
+                    totalAmount: 36346,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                },
+                {
+                    date: '03-10-2025',
+                    invoiceNo: 'SAKPDC004217/25-26',
+                    vehicleNo: 'AP39UW2589',
+                    material: '10MM',
+                    qty: 58.44,
+                    rate: 315,
+                    amount: 13690,
+                    totalAmount: 31291,
+                    customer: 'JS MINING &CONSTRUCTIONS'
+                }
+            ];
+            
+            allData = sampleData;
+            customers = new Set(sampleData.map(row => row.customer));
+            updateCustomerList();
+            document.getElementById('customerSearch').disabled = false;
+            document.getElementById('customerSearch').placeholder = "Search customer name...";
+            displayData(allData);
+        });
+    </script>
+</body>
+</html>
